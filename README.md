@@ -41,3 +41,6 @@ pip3 install numpy==1.22.0
 pip3 install modelscope==1.6.1
 ```
 
+# 升级最新版的
+pip install -U modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
+
