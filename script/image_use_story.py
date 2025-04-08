@@ -5,6 +5,8 @@ import os
 from PIL import Image
 import numpy as np
 from huggingface_hub import hf_hub_download
+import re
+import time
 
 # 设置模型缓存路径
 os.environ['HF_HOME'] = '/Users/hanxiang1/.cache/huggingface'
@@ -13,12 +15,16 @@ os.environ['HF_HUB_CACHE'] = '/Users/hanxiang1/.cache/huggingface/hub'
 MODEL_PATH = "/Users/hanxiang1/work/github_dev/pic_image_script/lora/cute/"
 BASE_MODEL_ID = "runwayml/stable-diffusion-v1-5"
 
-def load_model(model_file=None, lora_weight=0.5):
+def parse_lora_models(prompt):
+    """从提示词中解析LoRA模型和权重"""
+    pattern = r'<lora:([^:>]+):([0-9.]+)>'
+    return re.findall(pattern, prompt)
+
+def load_model(lora_models=None):
     """
     加载模型
     Args:
-        model_file: LoRA模型文件路径，如果为None则使用默认路径
-        lora_weight: LoRA模型权重，范围0-1，默认0.75
+        lora_models: List of tuples containing (lora_name, lora_weight)
     """
     # 加载基础模型
     pipe = StableDiffusionPipeline.from_pretrained(
@@ -29,38 +35,54 @@ def load_model(model_file=None, lora_weight=0.5):
         cache_dir='/Users/hanxiang1/.cache/huggingface/hub'
     )
 
-    # 设置LoRA文件夹为模型文件夹
-    pipe.load_lora_weights(MODEL_PATH)
+    # 如果有指定的LORA模型，则加载
+    if lora_models:
+        for lora_name, lora_weight in lora_models:
+            lora_file = f"{lora_name}.safetensors"
+            if not os.path.exists(os.path.join(MODEL_PATH, lora_file)):
+                print(f"警告: LORA模型 {lora_file} 未找到")
+                continue
+            
+            pipe.load_lora_weights(MODEL_PATH, weight_name=lora_file)
+            pipe.fuse_lora(lora_scale=float(lora_weight))
     
     return pipe
 
-def generate_image(prompt, output_path="output.png", num_inference_steps=20, guidance_scale=7.5):
+def generate_image(prompt, negative_prompt="", output_path="output.png", num_inference_steps=20, guidance_scale=7.5):
     """
     生成图片
     Args:
-        prompt: 文本提示词
+        prompt: 正向提示词
+        negative_prompt: 负向提示词
         output_path: 输出图片路径
         num_inference_steps: 推理步数
         guidance_scale: 提示词引导强度
     Returns:
         生成的图片路径
     """
+    # 从提示词中解析LoRA模型
+    lora_models = parse_lora_models(prompt)
+    
     # 确保输出目录存在
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     print("正在加载模型...")
     try:
-        pipe = load_model()
+        pipe = load_model(lora_models)
         pipe = pipe.to("cpu")  # 如果有 GPU 可以改为 "cuda"
         
-        # 不再添加额外的触发词
-        print(f"使用提示词: {prompt}")
+        # 移除LoRA标签后的提示词
+        clean_prompt = re.sub(r'<lora:[^>]+>', '', prompt).strip()
+        print(f"使用正向提示词: {clean_prompt}")
+        if negative_prompt:
+            print(f"使用负向提示词: {negative_prompt}")
         
         # 生成图片
         print("正在生成图片...")
         with torch.no_grad():
             image = pipe(
-                prompt,
+                clean_prompt,
+                negative_prompt=negative_prompt,
                 num_inference_steps=num_inference_steps,
                 guidance_scale=guidance_scale,
             ).images[0]
@@ -77,15 +99,20 @@ def generate_image(prompt, output_path="output.png", num_inference_steps=20, gui
 
 def main():
     # 测试样例
-    test_prompt = "(masterpiece:1.2), best quality,PIXIV, fairy tale style, one girl, plant, rabbit, cloud, outdoors, mountain, solo, food, basket, grass, fruit, closed eyes, day, smile, sky, tree, dress, leaf, scenery <lora:fairy tale style-000016:0.75> "
-    output_path = "outputs/generated_image.png"
+    test_prompt = "(masterpiece:1.2), best quality,PIXIV, fairy tale style, 1girl, fish, closed eyes, long hair, turtle, smile, open mouth, shirt, solo, window<lora:fairy tale style-000016:0.6>"
+    test_negative_prompt = "EasyNegative, badhandsv5-neg,Subtitles,word"
+    output_path = f'outputs/generated_image_{time.time()}.png'
     
-    print(f"正在处理提示词: {test_prompt}")
+    print(f"正在处理提示词...")
     try:
-        generated_image_path = generate_image(test_prompt, output_path)
+        generated_image_path = generate_image(
+            prompt=test_prompt,
+            negative_prompt=test_negative_prompt,
+            output_path=output_path
+        )
     except Exception as e:
         print(f"发生错误: {str(e)}")
         raise
-    
+
 if __name__ == "__main__":
     main()
