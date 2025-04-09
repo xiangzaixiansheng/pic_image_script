@@ -48,14 +48,14 @@ def load_model(lora_models=None):
     
     return pipe
 
-def generate_image(prompt, negative_prompt="", output_path="output.png", num_inference_steps=20, guidance_scale=7.5):
+def generate_image(prompt, negative_prompt="", output_path="output.png", num_inference_steps=50, guidance_scale=7.5):
     """
     生成图片
     Args:
         prompt: 正向提示词
         negative_prompt: 负向提示词
         output_path: 输出图片路径
-        num_inference_steps: 推理步数
+        num_inference_steps: 推理步数  速度优先：20~30 步（适合快速测试）。 质量优先：50~80 步（平衡质量与速度）。 超高精度：100+ 步（边际收益递减，耗时显著增加）
         guidance_scale: 提示词引导强度
     Returns:
         生成的图片路径
@@ -99,7 +99,7 @@ def generate_image(prompt, negative_prompt="", output_path="output.png", num_inf
 
 def main():
     # 测试样例
-    test_prompt = "(masterpiece:1.2), best quality,PIXIV, fairy tale style, 1girl, fish, closed eyes, long hair, turtle, smile, open mouth, shirt, solo, window<lora:fairy tale style-000016:0.6>"
+    test_prompt = "(masterpiece:1.2), best quality,PIXIV, fairy tale style, 1girl, fish, eyes, long hair, turtle, smile, open mouth, shirt, solo, window<lora:fairy tale style-000016:0.7>"
     test_negative_prompt = "EasyNegative, badhandsv5-neg,Subtitles,word"
     output_path = f'outputs/generated_image_{time.time()}.png'
     
