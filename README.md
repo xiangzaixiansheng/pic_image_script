@@ -44,3 +44,4 @@ pip3 install modelscope==1.6.1
 # 升级最新版的
 pip install -U modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple

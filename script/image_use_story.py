@@ -13,6 +13,7 @@ os.environ['HF_HOME'] = '/Users/hanxiang1/.cache/huggingface'
 os.environ['HF_HUB_CACHE'] = '/Users/hanxiang1/.cache/huggingface/hub'
 
 MODEL_PATH = "/Users/hanxiang1/work/github_dev/pic_image_script/lora/cute/"
+# 基础模型ID
 BASE_MODEL_ID = "runwayml/stable-diffusion-v1-5"
 
 def parse_lora_models(prompt):
@@ -62,6 +63,7 @@ def generate_image(prompt, negative_prompt="", output_path="output.png", num_inf
     """
     # 从提示词中解析LoRA模型
     lora_models = parse_lora_models(prompt)
+    print(f"解析到LoRA模型: {lora_models}")
     
     # 确保输出目录存在
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -97,22 +99,37 @@ def generate_image(prompt, negative_prompt="", output_path="output.png", num_inf
     
     return output_path
 
-def main():
+def generate_story_image(prompt, negative_prompt="", num_inference_steps=50, guidance_scale=7.5):
+    """
+    生成故事风格的图片API
+    Args:
+        prompt: 正向提示词
+        negative_prompt: 负向提示词
+        num_inference_steps: 推理步数
+        guidance_scale: 提示词引导强度
+    Returns:
+        生成的图片路径
+    """
+    output_path = f'outputs/generated_image_{time.time()}.png'
+    return generate_image(
+        prompt=prompt + ",highly detailed,8k resolution,photorealistic,realistic,absurdres,background light,extremely detailed，8k",
+        negative_prompt=negative_prompt,
+        output_path=output_path,
+        num_inference_steps=num_inference_steps,
+        guidance_scale=guidance_scale
+    )
+
+if __name__ == "__main__":
     # 测试样例
     test_prompt = "(masterpiece:1.2), best quality,PIXIV, fairy tale style, 1girl, fish, eyes, long hair, turtle, smile, open mouth, shirt, solo, window<lora:fairy tale style-000016:0.7>"
     test_negative_prompt = "EasyNegative, badhandsv5-neg,Subtitles,word"
-    output_path = f'outputs/generated_image_{time.time()}.png'
     
-    print(f"正在处理提示词...")
     try:
-        generated_image_path = generate_image(
+        generated_image_path = generate_story_image(
             prompt=test_prompt,
-            negative_prompt=test_negative_prompt,
-            output_path=output_path
+            negative_prompt=test_negative_prompt
         )
+        print(f"图片已生成: {generated_image_path}")
     except Exception as e:
         print(f"发生错误: {str(e)}")
         raise
-
-if __name__ == "__main__":
-    main()

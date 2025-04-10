@@ -8,6 +8,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from script.image_no_background import remove_background
 from script.image_portait import enhance_portrait
+from script.image_use_story import generate_story_image
 
 def process_background_removal(image):
     if image is None:
@@ -57,6 +58,19 @@ def process_portrait_enhancement(image):
     
     return output_path
 
+def process_story_generation(prompt, negative_prompt="", num_steps=50, guidance_scale=7.5):
+    """处理故事风格图片生成"""
+    try:
+        output_path = generate_story_image(
+            prompt=prompt,
+            negative_prompt=negative_prompt,
+            num_inference_steps=int(num_steps),
+            guidance_scale=float(guidance_scale)
+        )
+        return output_path
+    except Exception as e:
+        raise gr.Error(f"生成图片时出错: {str(e)}")
+
 def create_image_processing_interface():
     with gr.Blocks() as demo:
         gr.Markdown("# 图像处理工具")
@@ -87,6 +101,42 @@ def create_image_processing_interface():
                 fn=process_portrait_enhancement,
                 inputs=[portrait_input_image],
                 outputs=[portrait_result_view]
+            )
+
+        with gr.Tab("故事风格生成"):
+            with gr.Row():
+                with gr.Column():
+                    story_prompt = gr.Textbox(
+                        label="正向提示词",
+                        placeholder="输入正向提示词，例如: (masterpiece:1.2), best quality, fairy tale style..."
+                    )
+                    story_negative_prompt = gr.Textbox(
+                        label="负向提示词",
+                        placeholder="输入负向提示词，例如: EasyNegative, badhandsv5-neg..."
+                    )
+                    with gr.Row():
+                        num_steps = gr.Slider(
+                            minimum=20,
+                            maximum=100,
+                            value=50,
+                            step=1,
+                            label="推理步数"
+                        )
+                        guidance_scale = gr.Slider(
+                            minimum=1.0,
+                            maximum=20.0,
+                            value=7.5,
+                            step=0.1,
+                            label="提示词引导强度"
+                        )
+                with gr.Column():
+                    story_result_view = gr.Image(label="生成结果", interactive=False)
+            
+            story_process_btn = gr.Button("开始生成")
+            story_process_btn.click(
+                fn=process_story_generation,
+                inputs=[story_prompt, story_negative_prompt, num_steps, guidance_scale],
+                outputs=[story_result_view]
             )
     
     return demo

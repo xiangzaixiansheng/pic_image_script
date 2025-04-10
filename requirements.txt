@@ -1,4 +1,4 @@
-gradio>=4.12.0
+gradio==3.50.2
 modelscope==1.24.1
 torch>=2.0.0
 torchvision>=0.15.0
@@ -7,6 +7,12 @@ opencv-python>=4.8.0
 numpy>=1.24.0
 datasets>=2.16.0
 transformers==4.30.0
-diffusers>=0.21.4
-huggingface-hub>=0.19.4
+diffusers==0.21.4
+huggingface-hub==0.25.0
+accelerate==0.21.0
+peft==0.5.0
 safetensors>=0.3.1
+fastapi==0.95.2
+pydantic==1.10.12
+starlette==0.27.0
+typing-extensions>=4.5.0
