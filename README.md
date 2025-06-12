@@ -45,3 +45,43 @@ pip3 install modelscope==1.6.1
 pip install -U modelscope -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+---
+
+## Gradio 功能接口文档
+
+本项目通过 Gradio 提供了以下两个主要功能：
+
+### 1. 一键抠图（背景移除）
+
+- **功能说明**：上传图片，自动去除图片背景，输出为透明背景 PNG。
+- **输入**：图片文件（JPG/PNG）
+- **输出**：去除背景后的 PNG 图片
+- **前端操作**：在 Gradio 页面上传图片，点击“一键抠图”按钮获得结果。
+- **API 调用**（如需程序化调用）：
+    - `POST /api/predict/0`
+    - 请求体：multipart/form-data，字段名为 data，内容为图片
+    - 返回：去背景后的图片
+
+### 2. 人像增强
+
+- **功能说明**：上传人像图片，自动美化、增强细节。
+- **输入**：人像图片文件（JPG/PNG）
+- **输出**：增强后的人像图片
+- **前端操作**：在 Gradio 页面上传图片，点击“人像增强”按钮获得结果。
+- **API 调用**：
+    - `POST /api/predict/1`
+    - 请求体：multipart/form-data，字段名为 data，内容为图片
+    - 返回：增强后的人像图片
+
+#### 示例（API 调用）
+
+```bash
+# 一键抠图
+curl -X POST -F 'data=@your_image.jpg' http://localhost:7860/api/predict/0
+
+# 人像增强
+curl -X POST -F 'data=@your_image.jpg' http://localhost:7860/api/predict/1
+```
+
+---
