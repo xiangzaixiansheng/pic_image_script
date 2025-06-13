@@ -1,13 +1,51 @@
+import os
+import sys
+import glob
 from PIL import Image
 import matplotlib.pyplot as plt
 import torch
 from torchvision import transforms
-from modelscope import AutoModelForImageSegmentation
+
+# 必须在所有 import 之前设置环境变量
 import os
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+cache_dir = os.path.join(project_root, ".cache", "huggingface")
+os.environ["HF_HOME"] = cache_dir
+os.environ["TRANSFORMERS_CACHE"] = os.path.join(cache_dir, "transformers")
+os.environ["HF_DATASETS_CACHE"] = os.path.join(cache_dir, "datasets")
+
+from modelscope import AutoModelForImageSegmentation
 import datetime
 
+import glob
+
+def add_local_transformers_modules_to_sys_path():
+    """
+    prod 环境下：
+    1. 检查 /mnt/workspace/.cache/huggingface/modules/transformers_modules 是否存在，不存在则将项目 .cache 拷贝过去（适配 Docker 环境）。
+    """
+    if os.getenv("ENV") == "prod":
+        import shutil
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        local_cache_dir = os.path.join(project_root, ".cache")
+        docker_cache_root = "/mnt/workspace/.cache"
+        if not os.path.exists(docker_cache_root, "huggingface"):
+            try:
+                shutil.copytree(local_cache_dir, docker_cache_root, dirs_exist_ok=True)
+                print(f"已自动将项目 .cache 拷贝到 /mnt/workspace/.cache 适配 Docker 环境")
+            except Exception as e:
+                print(f"拷贝 .cache 到 Docker 失败: {e}")
+
+add_local_transformers_modules_to_sys_path()
+
+
 def remove_background(input_image_path):
-    model = AutoModelForImageSegmentation.from_pretrained('maple775885/RMBG-2.0', trust_remote_code=True)
+    if os.getenv("ENV") == "prod":
+        # Docker prod 环境下，模型路径指向 /mnt/workspace/.cache/modelscope/damo/RMBG-2.0
+        model_path = "/mnt/workspace/.cache/modelscope/maple775885/RMBG-2.0"
+    else:
+        model_path = "maple775885/RMBG-2.0"
+    model = AutoModelForImageSegmentation.from_pretrained(model_path, trust_remote_code=True)
     torch.set_float32_matmul_precision(['high', 'highest'][0])
     model.to('cpu')
     model.eval()

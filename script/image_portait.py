@@ -14,8 +14,12 @@ def enhance_portrait(input_image_path):
     Returns:
         str: 处理后图片的保存路径
     """
+    if os.getenv("ENV") == "prod":
+        model_path = "/mnt/workspace/.cache/modelscope/iic/cv_gpen_image-portrait-enhancement"
+    else:
+        model_path = "iic/cv_gpen_image-portrait-enhancement"
     # 创建pipeline（只需创建一次）
-    portrait_enhancement = pipeline(Tasks.image_portrait_enhancement, model='iic/cv_gpen_image-portrait-enhancement')
+    portrait_enhancement = pipeline(Tasks.image_portrait_enhancement, model=model_path)
     
     # 处理图片
     result = portrait_enhancement(input_image_path)

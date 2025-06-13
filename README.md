@@ -85,3 +85,6 @@ curl -X POST -F 'data=@your_image.jpg' http://localhost:7860/api/predict/1
 ```
 
 ---
+
+
+docker build --platform linux/x86_64 -t pic-image-ai .
