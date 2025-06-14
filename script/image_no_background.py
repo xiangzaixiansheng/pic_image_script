@@ -29,7 +29,7 @@ def add_local_transformers_modules_to_sys_path():
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         local_cache_dir = os.path.join(project_root, ".cache")
         docker_cache_root = "/mnt/workspace/.cache"
-        if not os.path.exists(docker_cache_root, "huggingface"):
+        if not os.path.exists(os.path.join(docker_cache_root, "huggingface")):
             try:
                 shutil.copytree(local_cache_dir, docker_cache_root, dirs_exist_ok=True)
                 print(f"已自动将项目 .cache 拷贝到 /mnt/workspace/.cache 适配 Docker 环境")

@@ -4,6 +4,7 @@ ENV XDG_CACHE_HOME /mnt/workspace/.cache
 
 COPY . /home/pic_img_script
 WORKDIR /home/pic_img_script
+RUN mkdir -p /home/pic_img_script/uwsgi
 
 RUN mkdir -p /mnt/workspace/.cache/modelscope/maple775885 && \
     cp -r ./model/maple775885/. /mnt/workspace/.cache/modelscope/maple775885/ && \
@@ -13,6 +14,8 @@ RUN mkdir -p /mnt/workspace/.cache/modelscope/maple775885 && \
 RUN pip3 install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
 
 ENV ENV=prod
+
+EXPOSE 7860
 
 # 启动命令（如入口为app.py，需根据实际调整）
 ENTRYPOINT ["uwsgi", "--ini", "img_uwsgi.ini"]
